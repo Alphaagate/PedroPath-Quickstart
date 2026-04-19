@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
@@ -39,6 +40,7 @@ public class RedAuto extends OpMode {
     public void loop() {
         follower.update();
         statePathUpdate();
+
     }
     public void start() {
         follower.followPath(drive1, true);
@@ -47,46 +49,63 @@ public class RedAuto extends OpMode {
     public void buildPaths(){
         drive1 = follower.pathBuilder()
                 .addPath(
-                        new BezierLine(
-                                new Pose(47.528, 50.193),
-                                new Pose(47.286, 94.304)
+                        new BezierCurve(
+                                new Pose(56.000, 8.000),
+                                new Pose(41.359, 40.545),
+                                new Pose(15.292, 35.186)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
-                .build();
-
-
-        drive2 = follower.pathBuilder()
+                .setTangentHeadingInterpolation()
                 .addPath(
                         new BezierLine(
-                                new Pose(47.286, 94.304),
-                                new Pose(93.684, 94.042)
+                                new Pose(15.292, 35.186),
+                                new Pose(55.913, 7.409)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                .build();
-        drive3 = follower.pathBuilder()
-
+                .setConstantHeadingInterpolation(Math.toRadians(180))
                 .addPath(
                         new BezierLine(
-                                new Pose(93.684, 94.042),
-                                new Pose(93.217, 47.577)
+                                new Pose(55.913, 7.409),
+                                new Pose(1.137, 7.794)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                .build();
-
-        drive4 = follower.pathBuilder()
-
+                .setConstantHeadingInterpolation(Math.toRadians(180))
                 .addPath(
                         new BezierLine(
-                                new Pose(93.217, 47.577),
-                                new Pose(48.555, 48.262)
+                                new Pose(1.137, 7.794),
+                                new Pose(55.562, 6.969)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .addPath(
+                        new BezierLine(
+                                new Pose(55.562, 6.969),
+                                new Pose(1.122, 7.860)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .addPath(
+                        new BezierLine(
+                                new Pose(1.122, 7.860),
+                                new Pose(55.466, 6.942)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .addPath(
+                        new BezierLine(
+                                new Pose(55.466, 6.942),
+                                new Pose(1.419, 7.752)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .addPath(
+                        new BezierLine(
+                                new Pose(1.419, 7.752),
+                                new Pose(55.200, 7.653)
+                        )
+                )
+                .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
-
         // use                         new Pose(58.384, 84.526, Math.toRadians(145)) as start point for next path
     }
 
