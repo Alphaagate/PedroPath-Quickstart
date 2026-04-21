@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 @Configurable
 @Autonomous
-public class BlueSoloClose extends OpMode {
+public class BlueNewClose extends OpMode {
 
 
     private int count = 0;
@@ -42,10 +42,8 @@ public class BlueSoloClose extends OpMode {
         DRIVE_SET2_TO_SHOOT,
         SHOOT_SET2,
         DRIVE_TO_GATE,
-        ADJUST,
-        ADJUST2,
-        ADJUST3,
         DRIVE_GATE_TO_SHOOT,
+        ADJUST,
         SHOOT_GATE,
         DRIVE_TO_SET1,
         INTAKE_SET1,
@@ -62,7 +60,7 @@ public class BlueSoloClose extends OpMode {
     PathState pathState;
 
     // Generated paths from visualizer
-    private PathChain driveStartToShoot, driveToSet1, driveSet1ToShoot, driveToGate, adjust, adjust2, adjust3, driveGateToShoot, driveToSet2, driveSet2ToShoot, driveToSet3 ,driveSet3ToShoot, driveToEnd;
+    private PathChain driveStartToShoot, driveToSet1, driveSet1ToShoot, driveToGate, driveGateToShoot, driveToSet2, driveSet2ToShoot, driveToSet3 ,driveSet3ToShoot, driveToEnd;
 
     private final double SHOOT_TIME = 1.6;
     private final double INTAKE_TIME = 0;
@@ -89,161 +87,126 @@ public class BlueSoloClose extends OpMode {
         // Red: (85.616, 88.526, 35°) -> (84.359, 54.832, 0°) -> (120, 57.5, 0°)
         // Blue: (60.884, 88.526, 145°) -> (62.141, 54.832, 180°) -> (26.5, 57.5, 180°)
         driveToSet2 = follower.pathBuilder()
-                .addPath(new BezierCurve(
-                        new Pose(55, 90, Math.toRadians(180)),
-                        new Pose(62, 54.832, Math.toRadians(180)),
-                        new Pose(24.5, 61, Math.toRadians(180))
-                ))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .addPath(
+                        new BezierCurve(
+                                new Pose(57.423, 75.143),
+                                new Pose(38.847, 58.795),
+                                new Pose(24.474, 60.173)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(200), Math.toRadians(180))
                 .build();
 
         // Red: (120, 57.5, 0°) -> (85.616, 84.526, 0°)
         // Blue: (26.5, 57.5, 180°) -> (60.884, 84.526, 180°)
         driveSet2ToShoot = follower.pathBuilder()
-                .addPath(new BezierLine(
-                        new Pose(24.5, 61, Math.toRadians(180)),
-                        new Pose(60.884, 84.526, Math.toRadians(180))
-                ))
+                .addPath(
+                        new BezierLine(
+                                new Pose(24.474, 60.173),
+                                new Pose(58.605, 73.010)
+                        )
+                )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         // Red: (85.616, 84.526, 0°) -> (121.5, 64, 0°)
         // Blue: (60.884, 84.526, 180°) -> (25, 64, 180°)
         driveToGate = follower.pathBuilder()
-                .addPath(new BezierCurve(
-                        new Pose(60.884, 84.526, Math.toRadians(180)),
-                        new Pose(59.38451134644478, 72.91655521936462, Math.toRadians(180)),
-                        new Pose(22, 65.25, Math.toRadians(180))
-                ))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .addPath(
+                        new BezierLine(
+                                new Pose(58.605, 73.010),
+                                new Pose(10.761, 58.727)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(150))
                 .build();
 
         // Red: (121.5, 64, 0°) -> (125, 63, 32°)
         // Blue: (25, 64, 180°) -> (21.5, 63, 148°)
         // Note: 180° - 32° = 148°
-        adjust = follower.pathBuilder()
-                .addPath(new BezierLine(
-                        new Pose(22, 65.25, Math.toRadians(180)),
-                        new Pose(16.7, 63.55, Math.toRadians(148))
-                ))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(148))
+        driveGateToShoot = follower.pathBuilder()
+                .addPath(
+                        new BezierLine(
+                                new Pose(10.761, 58.727),
+                                new Pose(57.951, 73.306)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(180))
                 .build();
 
         // Red: (125.522, 63, 0°) -> (89.141, 64.970, 0°) -> (85.616, 84.526, 0°)
         // Blue: (20.978, 63, 180°) -> (57.359, 64.970, 180°) -> (60.884, 84.526, 180°)
-        driveGateToShoot = follower.pathBuilder()
-                .addPath(new BezierCurve(
-                        new Pose(16.7, 63.55, Math.toRadians(180)),
-                        new Pose(57.35903782148259, 64.97026172465962, Math.toRadians(180)),
-                        new Pose(60.884, 84.526, Math.toRadians(180))
-                ))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                .build();
-
-        // Path 4: Shoot to set 1 - NOW SECOND
-        // Red: (85.616, 84.526, 0°) -> (120, 84.091, 0°)
-        // Blue: (60.884, 84.526, 180°) -> (26.5, 84.091, 180°)
-        driveToSet1 = follower.pathBuilder()
-                .addPath(new BezierLine(
-                        new Pose(60.884, 84.526, Math.toRadians(180)),
-                        new Pose(26.5, 84.591, Math.toRadians(180))
-                ))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                .build();
-
         // Path 5: Set 1 back to shoot (reversed)
         // Red: (120, 84.091, 0°) -> (85.616, 110, 0°)
         // Blue: (26.5, 84.091, 180°) -> (60.884, 110, 180°)
-        driveSet1ToShoot = follower.pathBuilder()
-                .addPath(new BezierLine(
-                        new Pose(26.5, 84.591, Math.toRadians(180)),
-                        new Pose(60.884, 84.526, Math.toRadians(180))
-                ))
-                .setTangentHeadingInterpolation()
-                .setReversed()
+        driveToSet1 = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(55.718, 83.089),
+                                new Pose(-5.351, 86.087),
+                                new Pose(55.512, 76.863)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(200))
                 .build();
 
         // Red: (85.616, 84.526, 0°) -> (70.572, 30.415, 0°) -> (121, 36, 0°)
         // Blue: (60.884, 84.526, 180°) -> (75.928, 30.415, 180°) -> (25.5, 36, 180°)
-        driveToSet3 = follower.pathBuilder()
-                .addPath(new BezierCurve(
-                        new Pose(60.884, 84.526, Math.toRadians(180)),
-                        new Pose(75.928, 30.415, Math.toRadians(180)),
-                        new Pose(23.5, 36, Math.toRadians(180))
-                ))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+        driveSet1ToShoot = follower.pathBuilder()
+                .addPath(
+                        new BezierLine(
+                                new Pose(55.512, 76.863),
+                                new Pose(10.906, 58.723)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(200), Math.toRadians(150))
                 .build();
 
         // Red: (121, 36, 0°) -> (85.616, 100.526, 0°)
         // Blue: (25.5, 36, 180°) -> (60.884, 100.526, 180°)
-        driveSet3ToShoot = follower.pathBuilder()
-                .addPath((new BezierLine(
-                        new Pose(23.5, 36, Math.toRadians(180)),
-                        new Pose(54.884, 120, Math.toRadians(180)))
-                ))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+        driveToSet3 = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(10.906, 58.723),
+                                new Pose(37.641, 65.484),
+                                new Pose(56.376, 74.244)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(250))
                 .build();
 
         // Path 6: Shoot to end position (park)
         // Red: (85.616, 84.526, 0°) -> (86.554, 120, 0°)
         // Blue: (60.884, 84.526, 180°) -> (59.946, 120, 180°)
+        driveSet3ToShoot = follower.pathBuilder()
+                .addPath(
+                        new BezierCurve(
+                                new Pose(56.376, 74.244),
+                                new Pose(58.271, 69.686),
+                                new Pose(43.376, 36.846),
+                                new Pose(23.465, 37.000)
+                        )
+                )
+                .setLinearHeadingInterpolation(Math.toRadians(250), Math.toRadians(180))
+                .build();
         driveToEnd = follower.pathBuilder()
-                .addPath(new BezierLine(
-                        new Pose(54.884, 120, Math.toRadians(180)),
-                        new Pose(54, 120, Math.toRadians(180))
-                ))
-                .setConstantHeadingInterpolation(Math.toRadians(180))
+
+                  .addPath(
+                new BezierLine(
+                        new Pose(23.465, 37.000),
+                        new Pose(60.446, 105.568)
+                )
+        )
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(270))
                 .build();
     }
 
     // Helper methods for mechanisms
-//    private void startIntake() {
-//        intake.setPower(INTAKE_POWER);
-//    }
-//
-//    private void stopIntake() {
-//        intake.setPower(0);
-//    }
-//
-//    private void startShooters() {
-//        // Use the flywheel mechanism's autoshoot to calculate velocity based on distance from turret
-//        double goalDistance = turret.getDistanceToGoal();
-//        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-//        flywheelMech.shoot(targetVelocity);
-//    }
-//
-//    private void updateShooters() {
-//        // Continuously update the flywheel during shooting using turret's calculated distance
-//        double goalDistance = turret.getDistanceToGoal();
-//        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-//        flywheelMech.shoot(targetVelocity);
-//    }
-//
-//    private void stopShooters() {
-//        flywheelMech.shoot(0);
-//    }
-//
-//    private void prepareToShoot() {
-//        // Use the hood mechanism's autoshoot to calculate hood position based on turret's distance
-//        double goalDistance = turret.getDistanceToGoal();
-//        double hoodPosition = hoodMech.autoshoot(goalDistance);
-//        hoodMech.setPosition(hoodPosition);
-//
-//        // Gate is already open from the drive, just set shooting flag
-//        isShooting = true;
-//        shootTimer.resetTimer();
-//    }
-//
-//    private void shoot() {
-//        // Gate is already open, just run intake to push balls through
-//        intake.setPower(INTAKE_POWER);
-//    }
-//
-//    private void stopShooting() {
-//        gate.setPosition(GATE_CLOSED);
-//        stopIntake();
-//        isShooting = false;
-//    }
+
+
+
+
+
 
     public void statePathUpdate() {
         switch (pathState) {
@@ -306,7 +269,7 @@ public class BlueSoloClose extends OpMode {
 
             case DRIVE_TO_GATE:
                 if (!follower.isBusy()){
-                    follower.followPath(adjust,1, true);
+//                    follower.followPath(adjust,1, true);
                     setPathState(PathState.ADJUST);
                 }
                 break;
@@ -454,26 +417,15 @@ public class BlueSoloClose extends OpMode {
         shootTimer = new Timer();
         follower = Constants.createFollower(hardwareMap);
 
-        // Initialize mechanisms
-//        turret.init(hardwareMap);
-//        hoodMech.init(hardwareMap);
-//        flywheelMech.init(hardwareMap);
-//
-//        // Initialize motors
-//        intake = hardwareMap.get(DcMotor.class, "intake");
-//        intake.setDirection(DcMotorSimple.Direction.REVERSE);
-//        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Initialize servos
-//        gate = hardwareMap.get(Servo.class, "gate");
-//        gate.setDirection(Servo.Direction.REVERSE);
-//
-//        // Set initial servo positions
-//        gate.setPosition(GATE_OPEN);
+
+
+        // Set initial servo positions
+
 
         buildPaths();
         // Blue starting position: mirrored X and heading (with 2.5 offset)
-        follower.setPose(new Pose(29.949, 132.454, Math.toRadians(145)));
+        follower.setPose(new Pose(22.55024711696869, 120.4481054365733, Math.toRadians(145)));
 
         telemetry.addLine("Initialized - Ready!");
         telemetry.update();
@@ -481,7 +433,7 @@ public class BlueSoloClose extends OpMode {
 
     public void start() {
         opModeTimer.resetTimer();
-//        startShooters(); // Start shooters using flywheel mechanism
+
         follower.followPath(driveStartToShoot, true);
         setPathState(PathState.DRIVE_START_TO_SHOOT);
     }
@@ -490,12 +442,8 @@ public class BlueSoloClose extends OpMode {
     public void loop() {
         follower.update();
         statePathUpdate();
-//        turret.update(follower, 0);
 
-        // Continuously update flywheel power during shooting
-        if (isShooting) {
-//            updateShooters();
-        }
+
 
         // Telemetry
         telemetry.addData("State", pathState);
@@ -506,10 +454,7 @@ public class BlueSoloClose extends OpMode {
         telemetry.addData("X", follower.getPose().getX());
         telemetry.addData("Y", follower.getPose().getY());
         telemetry.addData("Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
-//        telemetry.addData("Turret Position", turret.getCurrentPosition());
-//        telemetry.addData("Turret Target", turret.getTargetPosition());
-//        telemetry.addData("Distance to Goal", turret.getDistanceToGoal());
-//        telemetry.addData("Hood Position", hoodMech.getPosition());
+
 
         telemetry.update();
     }

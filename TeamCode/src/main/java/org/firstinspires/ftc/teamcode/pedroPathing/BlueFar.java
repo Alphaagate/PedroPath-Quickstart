@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.flywheel;
 import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.intake;
 
 @Autonomous
-public class RedAuto extends OpMode {
+public class BlueFar extends OpMode {
     private Follower follower;
 
     private flywheel flywheelMech = new flywheel();
