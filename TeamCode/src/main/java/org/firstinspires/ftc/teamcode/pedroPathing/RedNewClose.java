@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 @Configurable
 @Autonomous
-public class BlueNewClose extends OpMode {
+public class RedNewClose extends OpMode {
 
 
     private int count = 0;
@@ -77,11 +77,11 @@ public class BlueNewClose extends OpMode {
         driveStartToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(22.550, 120.448),
-                                new Pose(57.423, 75.143)
+                                new Pose(144-22.550, 120.448 + 180),
+                                new Pose(144-57.423, 75.143)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(45), Math.toRadians(180+180))
                 .build();
 
         // Red: (85.616, 88.526, 35°) -> (84.359, 54.832, 0°) -> (120, 57.5, 0°)
@@ -89,12 +89,12 @@ public class BlueNewClose extends OpMode {
         driveToSet2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(57.423, 75.143),
-                                new Pose(38.847, 58.795),
-                                new Pose(24.474, 60.173)
+                                new Pose(144-57.423, 75.143),
+                                new Pose(144-38.847, 58.795),
+                                new Pose(144-24.474, 60.173)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(200), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(200+ 180), Math.toRadians(180+ 180))
                 .build();
 
         // Red: (120, 57.5, 0°) -> (85.616, 84.526, 0°)
@@ -102,11 +102,11 @@ public class BlueNewClose extends OpMode {
         driveSet2ToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(24.474, 60.173),
-                                new Pose(58.605, 73.010)
+                                new Pose(144-24.474, 60.173),
+                                new Pose(144-58.605, 73.010)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(180+ 180), Math.toRadians(180+ 180))
                 .build();
 
         // Red: (85.616, 84.526, 0°) -> (121.5, 64, 0°)
@@ -114,11 +114,11 @@ public class BlueNewClose extends OpMode {
         driveToGate = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(58.605, 73.010),
-                                new Pose(10.761, 58.727)
+                                new Pose(144-58.605, 73.010),
+                                new Pose(144-10.761, 58.727)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(150))
+                .setLinearHeadingInterpolation(Math.toRadians(180+ 180), Math.toRadians(150+ 180))
                 .build();
 
         // Red: (121.5, 64, 0°) -> (125, 63, 32°)
@@ -127,11 +127,11 @@ public class BlueNewClose extends OpMode {
         driveGateToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(10.761, 58.727),
-                                new Pose(57.951, 73.306)
+                                new Pose(144-10.761, 58.727),
+                                new Pose(144-57.951, 73.306)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(150+ 180), Math.toRadians(180+ 180))
                 .build();
 
         // Red: (125.522, 63, 0°) -> (89.141, 64.970, 0°) -> (85.616, 84.526, 0°)
@@ -142,12 +142,12 @@ public class BlueNewClose extends OpMode {
         driveToSet1 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(55.718, 83.089),
-                                new Pose(-5.351, 86.087),
-                                new Pose(55.512, 76.863)
+                                new Pose(144-55.718, 83.089),
+                                new Pose(144+5.351, 86.087),
+                                new Pose(144-55.512, 76.863)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(200))
+                .setLinearHeadingInterpolation(Math.toRadians(180+ 180), Math.toRadians(200+ 180))
                 .build();
 
         // Red: (85.616, 84.526, 0°) -> (70.572, 30.415, 0°) -> (121, 36, 0°)
@@ -155,11 +155,11 @@ public class BlueNewClose extends OpMode {
         driveSet1ToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(55.512, 76.863),
-                                new Pose(10.906, 58.723)
+                                new Pose(144-55.512, 76.863),
+                                new Pose(144-10.906, 58.723)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(200), Math.toRadians(150))
+                .setLinearHeadingInterpolation(Math.toRadians(200+ 180), Math.toRadians(150+ 180))
                 .build();
 
         // Red: (121, 36, 0°) -> (85.616, 100.526, 0°)
@@ -167,12 +167,12 @@ public class BlueNewClose extends OpMode {
         driveToSet3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(10.906, 58.723),
-                                new Pose(37.641, 65.484),
-                                new Pose(56.376, 74.244)
+                                new Pose(144-10.906, 58.723),
+                                new Pose(144-37.641, 65.484),
+                                new Pose(144-56.376, 74.244)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(250))
+                .setLinearHeadingInterpolation(Math.toRadians(150+ 180), Math.toRadians(250+ 180))
                 .build();
 
         // Path 6: Shoot to end position (park)
@@ -181,78 +181,30 @@ public class BlueNewClose extends OpMode {
         driveSet3ToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(56.376, 74.244),
-                                new Pose(58.271, 69.686),
-                                new Pose(43.376, 36.846),
-                                new Pose(23.465, 37.000)
+                                new Pose(144-56.376, 74.244),
+                                new Pose(144-58.271, 69.686),
+                                new Pose(144-43.376, 36.846),
+                                new Pose(144-23.465, 37.000)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(250), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(250+ 180), Math.toRadians(180+ 180))
                 .build();
         driveToEnd = follower.pathBuilder()
 
                   .addPath(
                 new BezierLine(
-                        new Pose(23.465, 37.000),
-                        new Pose(60.446, 105.568)
+                        new Pose(144-23.465, 37.000),
+                        new Pose(144-60.446, 105.568)
                 )
         )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(270))
+                .setLinearHeadingInterpolation(Math.toRadians(180+ 180), Math.toRadians(270+ 180))
                 .build();
     }
 
     // Helper methods for mechanisms
 
 
-    // Helper methods for mechanisms
-//    private void startIntake() {
-//        intake.setPower(INTAKE_POWER);
-//    }
-//
-//    private void stopIntake() {
-//        intake.setPower(0);
-//    }
-//
-//    private void startShooters() {
-//        // Use the flywheel mechanism's autoshoot to calculate velocity based on distance from turret
-//        double goalDistance = turret.getDistanceToGoal();
-//        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-//        flywheelMech.shoot(targetVelocity);
-//    }
-//
-//    private void updateShooters() {
-//        // Continuously update the flywheel during shooting using turret's calculated distance
-//        double goalDistance = turret.getDistanceToGoal();
-//        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-//        flywheelMech.shoot(targetVelocity);
-//    }
-//
-//    private void stopShooters() {
-//        flywheelMech.shoot(0);
-//    }
-//
-//    private void prepareToShoot() {
-//        // Use the hood mechanism's autoshoot to calculate hood position based on turret's distance
-//        double goalDistance = turret.getDistanceToGoal();
-//        double hoodPosition = hoodMech.autoshoot(goalDistance);
-//        hoodMech.setPosition(hoodPosition);
-//
-//        // Gate is already open from the drive, just set shooting flag
-//        isShooting = true;
-//        shootTimer.resetTimer();
-//    }
-//
-//    private void shoot() {
-//        // Gate is already open, just run intake to push balls through
-//        intake.setPower(INTAKE_POWER);
-//    }
-//
-//    private void stopShooting() {
-//        gate.setPosition(GATE_CLOSED);
-//        stopIntake();
-//        isShooting = false;
-//    }
-//
+
 
 
 
@@ -473,7 +425,7 @@ public class BlueNewClose extends OpMode {
 
         buildPaths();
         // Blue starting position: mirrored X and heading (with 2.5 offset)
-        follower.setPose(new Pose(22.55024711696869, 120.4481054365733, Math.toRadians(145)));
+        follower.setPose(new Pose(144-22.55024711696869, 120.4481054365733, Math.toRadians(45)));
 
         telemetry.addLine("Initialized - Ready!");
         telemetry.update();
