@@ -9,12 +9,24 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.pedropathing.util.Timer;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+
+//import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.TurretMechanism4;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.ServoTurret;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.hood;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.flywheel;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Configurable
 @Autonomous
 public class BlueSoloClose extends OpMode {
 
-
+    private ServoTurret turret = new ServoTurret();
+    private hood hoodMech = new hood();
+    private flywheel flywheelMech = new flywheel();
     private int count = 0;
 
 
@@ -23,7 +35,10 @@ public class BlueSoloClose extends OpMode {
     Timer pathTimer, opModeTimer, shootTimer;
 
     // Motors
+    private DcMotor intake;
 
+    // Servos
+    private Servo gate;
 
     // Servo positions
     private final double GATE_OPEN = 0;
@@ -197,53 +212,53 @@ public class BlueSoloClose extends OpMode {
     }
 
     // Helper methods for mechanisms
-//    private void startIntake() {
-//        intake.setPower(INTAKE_POWER);
-//    }
-//
-//    private void stopIntake() {
-//        intake.setPower(0);
-//    }
-//
-//    private void startShooters() {
-//        // Use the flywheel mechanism's autoshoot to calculate velocity based on distance from turret
-//        double goalDistance = turret.getDistanceToGoal();
-//        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-//        flywheelMech.shoot(targetVelocity);
-//    }
-//
-//    private void updateShooters() {
-//        // Continuously update the flywheel during shooting using turret's calculated distance
-//        double goalDistance = turret.getDistanceToGoal();
-//        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-//        flywheelMech.shoot(targetVelocity);
-//    }
-//
-//    private void stopShooters() {
-//        flywheelMech.shoot(0);
-//    }
-//
-//    private void prepareToShoot() {
-//        // Use the hood mechanism's autoshoot to calculate hood position based on turret's distance
-//        double goalDistance = turret.getDistanceToGoal();
-//        double hoodPosition = hoodMech.autoshoot(goalDistance);
-//        hoodMech.setPosition(hoodPosition);
-//
-//        // Gate is already open from the drive, just set shooting flag
-//        isShooting = true;
-//        shootTimer.resetTimer();
-//    }
-//
-//    private void shoot() {
-//        // Gate is already open, just run intake to push balls through
-//        intake.setPower(INTAKE_POWER);
-//    }
-//
-//    private void stopShooting() {
-//        gate.setPosition(GATE_CLOSED);
-//        stopIntake();
-//        isShooting = false;
-//    }
+    private void startIntake() {
+        intake.setPower(INTAKE_POWER);
+    }
+
+    private void stopIntake() {
+        intake.setPower(0);
+    }
+
+    private void startShooters() {
+        // Use the flywheel mechanism's autoshoot to calculate velocity based on distance from turret
+        double goalDistance = turret.getDistanceToGoal();
+        double targetVelocity = flywheelMech.autoshoot(goalDistance);
+        flywheelMech.shoot(targetVelocity);
+    }
+
+    private void updateShooters() {
+        // Continuously update the flywheel during shooting using turret's calculated distance
+        double goalDistance = turret.getDistanceToGoal();
+        double targetVelocity = flywheelMech.autoshoot(goalDistance);
+        flywheelMech.shoot(targetVelocity);
+    }
+
+    private void stopShooters() {
+        flywheelMech.shoot(0);
+    }
+
+    private void prepareToShoot() {
+        // Use the hood mechanism's autoshoot to calculate hood position based on turret's distance
+        double goalDistance = turret.getDistanceToGoal();
+        double hoodPosition = hoodMech.autoshoot(goalDistance);
+        hoodMech.setPosition(hoodPosition);
+
+        // Gate is already open from the drive, just set shooting flag
+        isShooting = true;
+        shootTimer.resetTimer();
+    }
+
+    private void shoot() {
+        // Gate is already open, just run intake to push balls through
+        intake.setPower(INTAKE_POWER);
+    }
+
+    private void stopShooting() {
+        gate.setPosition(GATE_CLOSED);
+        stopIntake();
+        isShooting = false;
+    }
 
     public void statePathUpdate() {
         switch (pathState) {
@@ -455,21 +470,21 @@ public class BlueSoloClose extends OpMode {
         follower = Constants.createFollower(hardwareMap);
 
         // Initialize mechanisms
-//        turret.init(hardwareMap);
-//        hoodMech.init(hardwareMap);
-//        flywheelMech.init(hardwareMap);
-//
-//        // Initialize motors
-//        intake = hardwareMap.get(DcMotor.class, "intake");
-//        intake.setDirection(DcMotorSimple.Direction.REVERSE);
-//        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turret.init(hardwareMap);
+        hoodMech.init(hardwareMap);
+        flywheelMech.init(hardwareMap);
 
-        // Initialize servos
-//        gate = hardwareMap.get(Servo.class, "gate");
-//        gate.setDirection(Servo.Direction.REVERSE);
-//
-//        // Set initial servo positions
-//        gate.setPosition(GATE_OPEN);
+        // Initialize motors
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+//         Initialize servos
+        gate = hardwareMap.get(Servo.class, "gate");
+        gate.setDirection(Servo.Direction.REVERSE);
+
+        // Set initial servo positions
+        gate.setPosition(GATE_OPEN);
 
         buildPaths();
         // Blue starting position: mirrored X and heading (with 2.5 offset)
@@ -481,7 +496,7 @@ public class BlueSoloClose extends OpMode {
 
     public void start() {
         opModeTimer.resetTimer();
-//        startShooters(); // Start shooters using flywheel mechanism
+        startShooters(); // Start shooters using flywheel mechanism
         follower.followPath(driveStartToShoot, true);
         setPathState(PathState.DRIVE_START_TO_SHOOT);
     }
@@ -490,11 +505,11 @@ public class BlueSoloClose extends OpMode {
     public void loop() {
         follower.update();
         statePathUpdate();
-//        turret.update(follower, 0);
+        turret.update(follower); //? not sure if needs ,0
 
         // Continuously update flywheel power during shooting
         if (isShooting) {
-//            updateShooters();
+            updateShooters();
         }
 
         // Telemetry

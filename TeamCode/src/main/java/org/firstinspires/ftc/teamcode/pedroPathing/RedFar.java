@@ -189,6 +189,57 @@ public class RedFar extends OpMode {
         // use                         new Pose(58.384, 84.526, Math.toRadians(145)) as start point for next path
     }
 
+
+
+    // Helper methods for mechanisms
+    private void startIntake() {
+        intake.setPower(INTAKE_POWER);
+    }
+
+    private void stopIntake() {
+        intake.setPower(0);
+    }
+
+    private void startShooters() {
+        // Use the flywheel mechanism's autoshoot to calculate velocity based on distance from turret
+        double goalDistance = turret.getDistanceToGoal();
+        double targetVelocity = flywheelMech.autoshoot(goalDistance);
+        flywheelMech.shoot(targetVelocity);
+    }
+
+    private void updateShooters() {
+        // Continuously update the flywheel during shooting using turret's calculated distance
+        double goalDistance = turret.getDistanceToGoal();
+        double targetVelocity = flywheelMech.autoshoot(goalDistance);
+        flywheelMech.shoot(targetVelocity);
+    }
+
+    private void stopShooters() {
+        flywheelMech.shoot(0);
+    }
+
+    private void prepareToShoot() {
+        // Use the hood mechanism's autoshoot to calculate hood position based on turret's distance
+        double goalDistance = turret.getDistanceToGoal();
+        double hoodPosition = hoodMech.autoshoot(goalDistance);
+        hoodMech.setPosition(hoodPosition);
+
+        // Gate is already open from the drive, just set shooting flag
+        isShooting = true;
+        shootTimer.resetTimer();
+    }
+
+    private void shoot() {
+        // Gate is already open, just run intake to push balls through
+        intake.setPower(INTAKE_POWER);
+    }
+
+    private void stopShooting() {
+        gate.setPosition(GATE_CLOSED);
+        stopIntake();
+        isShooting = false;
+    }
+
     public void statePathUpdate() {
         switch (pathState) {
             case START:
