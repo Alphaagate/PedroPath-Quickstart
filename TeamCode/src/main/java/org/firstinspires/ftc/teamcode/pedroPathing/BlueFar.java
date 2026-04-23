@@ -22,6 +22,7 @@ public class BlueFar extends OpMode {
     private hood hoodMech = new hood();
     private flywheel flywheelMech = new flywheel();
     private Follower follower;
+    Timer pathTimer, opModeTimer, shootTimer;
 
 
     // Motors
@@ -34,6 +35,8 @@ public class BlueFar extends OpMode {
 
     // Motor powers
     private final double INTAKE_POWER = 1.0;
+    private boolean isShooting = false;
+
     int count = 0;
 
 
@@ -71,8 +74,14 @@ public class BlueFar extends OpMode {
 
     @Override
     public void loop() {
+
         follower.update();
         statePathUpdate();
+        turret.update(follower); //? not sure if needs ,0
+        // Continuously update flywheel power during shooting
+        if (isShooting) {
+            updateShooters();
+        }
     }
     public void start() {
         follower.followPath(drive1, true);
@@ -340,6 +349,201 @@ public class BlueFar extends OpMode {
                     setPathState(PathState.IDLE);
                 }
                 break;
+//            public void statePathUpdate() {
+//                switch (pathState) {
+//                    case START:
+//                        if (!follower.isBusy()) {
+////                    updateShooters();
+//
+////                    prepareToShoot();
+//                            setPathState(BlueSoloClose.PathState.);
+//                        }
+//                        break;
+//
+//                    case SHOOT_PRELOAD:
+////                shoot();
+//                        if (pathTimer.getElapsedTimeSeconds() > 1.5) {
+////                    stopShooting();
+//                            follower.followPath(driveToSet2, true);
+//                            setPathState(BlueSoloClose.PathState.DRIVE_TO_SET2);
+////                    startIntake();
+//                        }
+//                        break;
+//
+//                    case DRIVE_TO_SET2:
+//                        if (!follower.isBusy()) {
+//                            setPathState(BlueSoloClose.PathState.INTAKE_SET2);
+//                        }
+//                        break;
+//
+//                    case INTAKE_SET2:
+//                        if (pathTimer.getElapsedTimeSeconds() > INTAKE_TIME) {
+//                            // Keep gate closed and intake running during drive
+////                    gate.setPosition(GATE_CLOSED);
+//                            follower.followPath(driveSet2ToShoot, true);
+//                            setPathState(BlueSoloClose.PathState.DRIVE_SET2_TO_SHOOT);
+//                        }
+//                        break;
+//
+//                    case DRIVE_SET2_TO_SHOOT:
+//                        // Run intake for 0.5s during drive, then stop and open gate
+//                        if (pathTimer.getElapsedTimeSeconds() >= 0.5) {
+////                    stopIntake();
+////                    gate.setPosition(GATE_OPEN);
+//                        }
+//
+//                        if (!follower.isBusy()) {
+////                    prepareToShoot();
+//                            setPathState(BlueSoloClose.PathState.SHOOT_SET2);
+//                        }
+//                        break;
+//
+//                    case SHOOT_SET2:
+////                shoot();
+//                        if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
+////                    stopShooting();
+//                            follower.followPath(driveToGate, true);
+//                            setPathState(BlueSoloClose.PathState.DRIVE_TO_GATE);
+////                    startIntake();
+//                        }
+//                        break;
+//
+//                    case DRIVE_TO_GATE:
+//                        if (!follower.isBusy()){
+//                            follower.followPath(adjust,1, true);
+//                            setPathState(BlueSoloClose.PathState.ADJUST);
+//                        }
+//                        break;
+//
+//                    case ADJUST:
+//                        if (pathTimer.getElapsedTimeSeconds() >= 1.5){
+//                            // Keep gate closed and intake running during drive
+////                    gate.setPosition(GATE_CLOSED);
+//                            follower.followPath(driveGateToShoot, true);
+//                            setPathState(BlueSoloClose.PathState.DRIVE_GATE_TO_SHOOT);
+//                        }
+//                        break;
+//
+//
+//                    case DRIVE_GATE_TO_SHOOT:
+//                        // Run intake for 0.5s during drive, then stop and open gate
+//                        if (pathTimer.getElapsedTimeSeconds() >= 0.5) {
+////                    stopIntake();
+////                    gate.setPosition(GATE_OPEN);
+//                        }
+//
+//                        if(!follower.isBusy()){
+////                    prepareToShoot();
+//                            setPathState(BlueSoloClose.PathState.SHOOT_GATE);
+//                        }
+//                        break;
+//
+//                    case SHOOT_GATE:
+////                shoot();
+//                        if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
+////                    stopShooting();
+//                            count++;
+//                            if (count == 3) {
+//                                follower.followPath(driveToSet1, true);
+//                                setPathState(BlueSoloClose.PathState.DRIVE_TO_SET1);
+////                        startIntake();
+//                            }
+//                            else {
+//                                follower.followPath(driveToGate, true);
+//                                setPathState(BlueSoloClose.PathState.DRIVE_TO_GATE);
+////                        startIntake();
+//                            }
+//                        }
+//                        break;
+//
+//                    case DRIVE_TO_SET1:
+//                        if (!follower.isBusy()) {
+//                            setPathState(BlueSoloClose.PathState.INTAKE_SET1);
+//                        }
+//                        break;
+//
+//                    case INTAKE_SET1:
+//                        if (pathTimer.getElapsedTimeSeconds() > INTAKE_TIME) {
+//                            // Keep gate closed and intake running during drive
+////                    gate.setPosition(GATE_CLOSED);
+//                            follower.followPath(driveSet1ToShoot, true);
+//                            setPathState(BlueSoloClose.PathState.DRIVE_SET1_TO_SHOOT);
+//                        }
+//                        break;
+//
+//                    case DRIVE_SET1_TO_SHOOT:
+//                        // Run intake for 0.5s during drive, then stop and open gate
+//                        if (pathTimer.getElapsedTimeSeconds() >= 0.5) {
+////                    stopIntake();
+////                    gate.setPosition(GATE_OPEN);
+//                        }
+//
+//                        if (!follower.isBusy()) {
+////                    prepareToShoot();
+//                            setPathState(BlueSoloClose.PathState.SHOOT_SET1);
+//                        }
+//                        break;
+//
+//                    case SHOOT_SET1:
+////                shoot();
+//                        if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
+////                    stopShooting();
+//                            follower.followPath(driveToEnd, true);
+////                    startIntake();
+//                            setPathState(BlueSoloClose.PathState.DRIVE_TO_END);
+//                        }
+//                        break;
+//
+//                    case DRIVE_TO_SET3:
+//                        if (!follower.isBusy()) {
+//                            setPathState(BlueSoloClose.PathState.INTAKE_SET3);
+//                        }
+//                        break;
+//
+//                    case INTAKE_SET3:
+//                        if (pathTimer.getElapsedTimeSeconds() > INTAKE_TIME) {
+//                            // Keep gate closed and intake running during drive
+////                    gate.setPosition(GATE_CLOSED);
+//                            follower.followPath(driveSet3ToShoot, true);
+//                            setPathState(BlueSoloClose.PathState.DRIVE_SET3_TO_SHOOT);
+//                        }
+//                        break;
+//
+//                    case DRIVE_SET3_TO_SHOOT:
+//                        // Run intake for 0.5s during drive, then stop and open gate
+//                        if (pathTimer.getElapsedTimeSeconds() >= 0.5) {
+////                    stopIntake();
+////                    gate.setPosition(GATE_OPEN);
+//                        }
+//
+//                        if (!follower.isBusy()) {
+////                    prepareToShoot();
+//                            setPathState(BlueSoloClose.PathState.SHOOT_SET3);
+//                        }
+//                        break;
+//
+//                    case SHOOT_SET3:
+////                shoot();
+//                        if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
+////                    stopShooting();
+//                            follower.followPath(driveToEnd, true);
+//                            setPathState(BlueSoloClose.PathState.DRIVE_TO_END);
+//                        }
+//                        break;
+//
+//                    case DRIVE_TO_END:
+//                        if (!follower.isBusy()) {
+//                            setPathState(BlueSoloClose.PathState.IDLE);
+//                        }
+//                        break;
+//
+//                    case IDLE:
+//                        break;
+//
+//                    default:
+//                        break;
+//                }
+//            }
 
             case IDLE:
                 break;

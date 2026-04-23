@@ -517,7 +517,12 @@ public class BlueNewClose extends OpMode {
     public void loop() {
         follower.update();
         statePathUpdate();
+        turret.update(follower); //? not sure if needs ,0
 
+        // Continuously update flywheel power during shooting
+        if (isShooting) {
+            updateShooters();
+        }
 
 
         // Telemetry

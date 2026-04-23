@@ -9,30 +9,39 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.ServoTurret;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.flywheel;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.hood;
 
 @Configurable
 @Autonomous
 public class RedNewClose extends OpMode {
 
-
-    private int count = 0;
-
-
-
+    private ServoTurret turret = new ServoTurret();
+    private hood hoodMech = new hood();
+    private flywheel flywheelMech = new flywheel();
     private Follower follower;
     Timer pathTimer, opModeTimer, shootTimer;
 
+
     // Motors
+    private DcMotor intake;
 
-
-    // Servo positions
+    // Servos
+    private Servo gate;
     private final double GATE_OPEN = 0;
     private final double GATE_CLOSED = 1;
 
     // Motor powers
     private final double INTAKE_POWER = 1.0;
-
     private boolean isShooting = false;
+
+    int count = 0;
+
+
 
     public enum PathState {
         DRIVE_START_TO_SHOOT,
@@ -491,7 +500,12 @@ public class RedNewClose extends OpMode {
     public void loop() {
         follower.update();
         statePathUpdate();
+        turret.update(follower); //? not sure if needs ,0
 
+        // Continuously update flywheel power during shooting
+        if (isShooting) {
+            updateShooters();
+        }
 
 
         // Telemetry

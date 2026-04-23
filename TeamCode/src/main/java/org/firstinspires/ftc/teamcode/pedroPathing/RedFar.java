@@ -8,17 +8,34 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.ServoTurret;
 import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.flywheel;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.hood;
 import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.intake;
 
 @Autonomous
 public class RedFar extends OpMode {
-    private Follower follower;
-
+    private ServoTurret turret = new ServoTurret();
+    private hood hoodMech = new hood();
     private flywheel flywheelMech = new flywheel();
+    private Follower follower;
+    Timer pathTimer, opModeTimer, shootTimer;
 
-    private intake intake = new intake();
+
+    // Motors
+    private DcMotor intake;
+
+    // Servos
+    private Servo gate;
+    private final double GATE_OPEN = 0;
+    private final double GATE_CLOSED = 1;
+
+    // Motor powers
+    private final double INTAKE_POWER = 1.0;
+    private boolean isShooting = false;
 
     int count = 0;
 
@@ -57,8 +74,14 @@ public class RedFar extends OpMode {
 
     @Override
     public void loop() {
+
         follower.update();
         statePathUpdate();
+        turret.update(follower); //? not sure if needs ,0
+        // Continuously update flywheel power during shooting
+        if (isShooting) {
+            updateShooters();
+        }
     }
     public void start() {
         follower.followPath(drive1, true);
