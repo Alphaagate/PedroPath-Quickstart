@@ -86,7 +86,7 @@ public class RedNewClose extends OpMode {
         driveStartToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(144-22.550, 120.448 + 180),
+                                new Pose(144-22.550, 120.448),
                                 new Pose(144-57.423, 75.143)
                         )
                 )
@@ -483,7 +483,7 @@ public class RedNewClose extends OpMode {
 
         buildPaths();
         // Blue starting position: mirrored X and heading (with 2.5 offset)
-        follower.setPose(new Pose(144-22.55024711696869, 120.4481054365733, Math.toRadians(45)));
+        follower.setPose(new Pose(122.55024711696869, 120.4481054365733, Math.toRadians(45)));
 
         telemetry.addLine("Initialized - Ready!");
         telemetry.update();
@@ -500,7 +500,7 @@ public class RedNewClose extends OpMode {
     public void loop() {
         follower.update();
         statePathUpdate();
-        turret.update(follower); //? not sure if needs ,0
+//        turret.update(follower); //? not sure if needs ,0
 
         // Continuously update flywheel power during shooting
         if (isShooting) {

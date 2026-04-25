@@ -5,44 +5,42 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.ServoTurret;
-import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.flywheel;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.ServoTurret2;
+//import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.flywheel;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.hood;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.intake;
 
 @Configurable
 @Autonomous
 public class BlueNewClose extends OpMode {
 
-    private ServoTurret turret = new ServoTurret();
-    private hood hoodMech = new hood();
-    private flywheel flywheelMech = new flywheel();
+    private ServoTurret2 turret = new ServoTurret2();
+    private hood hood = new hood();
+    private gate gate = new gate();
+    private intake intake = new intake();
+
     private int count = 0;
 
-
+    public double vel;
 
     private Follower follower;
     Timer pathTimer, opModeTimer, shootTimer;
 
     // Motors
-    private DcMotor intake;
-
-    // Servos
-    private Servo gate;
+    private DcMotorEx outtake, outtake2;
 
     // Servo positions
-    private final double GATE_OPEN = 0;
-    private final double GATE_CLOSED = 1;
 
-    // Motor powers
-    private final double INTAKE_POWER = 1.0;
 
     private boolean isShooting = false;
 
@@ -74,7 +72,7 @@ public class BlueNewClose extends OpMode {
     // Generated paths from visualizer
     private PathChain driveStartToShoot, driveToSet1, driveSet1ToShoot, driveToGate, driveGateToShoot, driveToSet2, driveSet2ToShoot, driveToSet3 ,driveSet3ToShoot, driveToEnd;
 
-    private final double SHOOT_TIME = 1.6;
+    private final double SHOOT_TIME = 1;
     private final double INTAKE_TIME = 0;
     private final double INTAKE_GATE_TIME = 1.5;
 
@@ -90,10 +88,10 @@ public class BlueNewClose extends OpMode {
                 .addPath(
                         new BezierLine(
                                 new Pose(22.550, 120.448),
-                                new Pose(57.423, 75.143)
+                                new Pose(53.423, 75.143)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(145), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         // Red: (85.616, 88.526, 35°) -> (84.359, 54.832, 0°) -> (120, 57.5, 0°)
@@ -101,7 +99,7 @@ public class BlueNewClose extends OpMode {
         driveToSet2 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(57.423, 75.143),
+                                new Pose(53.423, 75.143),
                                 new Pose(38.847, 58.795),
                                 new Pose(24.474, 60.173)
                         )
@@ -115,7 +113,7 @@ public class BlueNewClose extends OpMode {
                 .addPath(
                         new BezierLine(
                                 new Pose(24.474, 60.173),
-                                new Pose(58.605, 73.010)
+                                new Pose(53.423, 75.143)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
@@ -126,11 +124,11 @@ public class BlueNewClose extends OpMode {
         driveToGate = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(58.605, 73.010),
-                                new Pose(10.761, 58.727)
+                                new Pose(53.423, 75.143),
+                                new Pose(9.261, 56.727)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(150))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(155))
                 .build();
 
         // Red: (121.5, 64, 0°) -> (125, 63, 32°)
@@ -139,11 +137,11 @@ public class BlueNewClose extends OpMode {
         driveGateToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(10.761, 58.727),
-                                new Pose(57.951, 73.306)
+                                new Pose(9.261, 56.727),
+                                new Pose(53.423, 75.143)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(180))
                 .build();
 
         // Red: (125.522, 63, 0°) -> (89.141, 64.970, 0°) -> (85.616, 84.526, 0°)
@@ -153,13 +151,14 @@ public class BlueNewClose extends OpMode {
         // Blue: (26.5, 84.091, 180°) -> (60.884, 110, 180°)
         driveToSet1 = follower.pathBuilder()
                 .addPath(
-                        new BezierCurve(
-                                new Pose(55.718, 83.089),
-                                new Pose(-5.351, 86.087),
-                                new Pose(55.512, 76.863)
+                        new BezierLine(
+                                new Pose(53.423, 75.143),
+                                new Pose(23.43050847457627, 82.94237288135591)
+//                                new Pose(60.884, 84.526, Math.toRadians(180)),
+//                                new Pose(26.5, 84.591, Math.toRadians(180))
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(200))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         // Red: (85.616, 84.526, 0°) -> (70.572, 30.415, 0°) -> (121, 36, 0°)
@@ -167,39 +166,51 @@ public class BlueNewClose extends OpMode {
         driveSet1ToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(55.512, 76.863),
-                                new Pose(10.906, 58.723)
+                                new Pose(23.43050847457627, 82.94237288135591),
+                                new Pose(53.423, 75.143)
+//                                new Pose(26.5, 84.591, Math.toRadians(180)),
+//                                new Pose(60.884, 84.526, Math.toRadians(180))
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(200), Math.toRadians(150))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(250))
                 .build();
 
         // Red: (121, 36, 0°) -> (85.616, 100.526, 0°)
         // Blue: (25.5, 36, 180°) -> (60.884, 100.526, 180°)
-        driveToSet3 = follower.pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Pose(10.906, 58.723),
-                                new Pose(37.641, 65.484),
-                                new Pose(56.376, 74.244)
-                        )
-                )
-                .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(250))
-                .build();
+//        driveToSet3 = follower.pathBuilder()
+//                .addPath(
+//                        new BezierCurve(
+//                                new Pose(10.906, 58.723),
+//                                new Pose(37.641, 65.484),
+//                                new Pose(56.376, 74.244)
+////                                new Pose(60.884, 84.526, Math.toRadians(180)),
+////                                new Pose(75.928, 30.415, Math.toRadians(180)),
+////                                new Pose(23.5, 36, Math.toRadians(180))
+//                        )
+//                )
+//                .setLinearHeadingInterpolation(Math.toRadians(150), Math.toRadians(250))
+//                .build();
 
         // Path 6: Shoot to end position (park)
         // Red: (85.616, 84.526, 0°) -> (86.554, 120, 0°)
         // Blue: (60.884, 84.526, 180°) -> (59.946, 120, 180°)
-        driveSet3ToShoot = follower.pathBuilder()
+        driveToSet3 = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(56.376, 74.244),
+                                new Pose(53.423, 75.143),
                                 new Pose(58.271, 69.686),
                                 new Pose(43.376, 36.846),
                                 new Pose(23.465, 37.000)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(250), Math.toRadians(180))
+                .build();
+        driveSet3ToShoot = follower.pathBuilder()
+                .addPath((new BezierLine(
+                        new Pose(23.5, 36, Math.toRadians(180)),
+                        new Pose(54.884, 120, Math.toRadians(180)))
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
         driveToEnd = follower.pathBuilder()
 
@@ -213,59 +224,57 @@ public class BlueNewClose extends OpMode {
                 .build();
     }
 
-    // Helper methods for mechanisms
 
 
     // Helper methods for mechanisms
-    private void startIntake() {
-        intake.setPower(INTAKE_POWER);
-    }
+//    private void startIntake() {
+//        intake.setPower(INTAKE_POWER);
+//    }
+//
+//    private void stopIntake() {
+//        intake.setPower(0);
+//    }
 
-    private void stopIntake() {
-        intake.setPower(0);
-    }
-
-    private void startShooters() {
-        // Use the flywheel mechanism's autoshoot to calculate velocity based on distance from turret
-        double goalDistance = turret.getDistanceToGoal();
-        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-        flywheelMech.shoot(targetVelocity);
-    }
+//    private void startShooters() {
+//        // Use the flywheel mechanism's autoshoot to calculate velocity based on distance from turret
+//        double goalDistance = turret.getDistanceToGoal();
+//        double targetVelocity = flywheelMech.autoshoot(goalDistance);
+//        flywheelMech.shoot(targetVelocity);
+//    }
 
     private void updateShooters() {
         // Continuously update the flywheel during shooting using turret's calculated distance
         double goalDistance = turret.getDistanceToGoal();
-        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-        flywheelMech.shoot(targetVelocity);
+
     }
 
-    private void stopShooters() {
-        flywheelMech.shoot(0);
-    }
-
-    private void prepareToShoot() {
-        // Use the hood mechanism's autoshoot to calculate hood position based on turret's distance
-        double goalDistance = turret.getDistanceToGoal();
-        double hoodPosition = hoodMech.autoshoot(goalDistance);
-        hoodMech.setPosition(hoodPosition);
-
-        // Gate is already open from the drive, just set shooting flag
-        isShooting = true;
-        shootTimer.resetTimer();
-    }
-
-    private void shoot() {
-        // Gate is already open, just run intake to push balls through
-        intake.setPower(INTAKE_POWER);
-    }
-
-    private void stopShooting() {
-        gate.setPosition(GATE_CLOSED);
-        stopIntake();
-        isShooting = false;
-    }
-
-
+//    private void stopShooters() {
+//        flywheelMech.shoot(0);
+//    }
+//
+//    private void prepareToShoot() {
+//        // Use the hood mechanism's autoshoot to calculate hood position based on turret's distance
+//        double goalDistance = turret.getDistanceToGoal();
+//        double hoodPosition = hoodMech.autoshoot(goalDistance);
+//        hoodMech.setPosition(hoodPosition);
+//
+//        // Gate is already open from the drive, just set shooting flag
+//        isShooting = true;
+//        shootTimer.resetTimer();
+//    }
+//
+//    private void shoot() {
+//        // Gate is already open, just run intake to push balls through
+//        intake.setPower(INTAKE_POWER);
+//    }
+//
+//    private void stopShooting() {
+//        gate.setPosition(GATE_CLOSED);
+//        stopIntake();
+//        isShooting = false;
+//    }
+//
+//
 
 
     public void statePathUpdate() {
@@ -280,9 +289,9 @@ public class BlueNewClose extends OpMode {
                 break;
 
             case SHOOT_PRELOAD:
-//                shoot();
-                if (pathTimer.getElapsedTimeSeconds() > 1.5) {
-//                    stopShooting();
+                gate.open();
+                if (pathTimer.getElapsedTimeSeconds() > 1) {
+gate.close();
                     follower.followPath(driveToSet2, true);
                     setPathState(PathState.DRIVE_TO_SET2);
 //                    startIntake();
@@ -318,9 +327,9 @@ public class BlueNewClose extends OpMode {
                 break;
 
             case SHOOT_SET2:
-//                shoot();
+                gate.open();
                 if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
-//                    stopShooting();
+                    gate.close();
                     follower.followPath(driveToGate, true);
                     setPathState(PathState.DRIVE_TO_GATE);
 //                    startIntake();
@@ -358,11 +367,11 @@ public class BlueNewClose extends OpMode {
                 break;
 
             case SHOOT_GATE:
-//                shoot();
+                gate.open();
                 if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
-//                    stopShooting();
+                    gate.close();
                     count++;
-                    if (count == 3) {
+                    if (count >= 3) {
                         follower.followPath(driveToSet1, true);
                         setPathState(PathState.DRIVE_TO_SET1);
 //                        startIntake();
@@ -381,12 +390,11 @@ public class BlueNewClose extends OpMode {
                 }
                 break;
 
+
             case INTAKE_SET1:
                 if (pathTimer.getElapsedTimeSeconds() > INTAKE_TIME) {
-                    // Keep gate closed and intake running during drive
-//                    gate.setPosition(GATE_CLOSED);
                     follower.followPath(driveSet1ToShoot, true);
-                    setPathState(PathState.DRIVE_SET1_TO_SHOOT);
+                    setPathState(PathState.DRIVE_SET1_TO_SHOOT); // <-- correct
                 }
                 break;
 
@@ -404,12 +412,12 @@ public class BlueNewClose extends OpMode {
                 break;
 
             case SHOOT_SET1:
-//                shoot();
+                gate.open();
                 if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
-//                    stopShooting();
-                    follower.followPath(driveToEnd, true);
+                    gate.close();
+                    follower.followPath(driveToSet3, true);
 //                    startIntake();
-                    setPathState(PathState.DRIVE_TO_END);
+                    setPathState(PathState.DRIVE_TO_SET3);
                 }
                 break;
 
@@ -437,24 +445,24 @@ public class BlueNewClose extends OpMode {
 
                 if (!follower.isBusy()) {
 //                    prepareToShoot();
-                    setPathState(PathState.SHOOT_SET3);
-                }
-                break;
-
-            case SHOOT_SET3:
-//                shoot();
-                if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
-//                    stopShooting();
-                    follower.followPath(driveToEnd, true);
-                    setPathState(PathState.DRIVE_TO_END);
-                }
-                break;
-
-            case DRIVE_TO_END:
-                if (!follower.isBusy()) {
                     setPathState(PathState.IDLE);
                 }
                 break;
+
+//            case SHOOT_SET3:
+////                shoot();
+//                if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
+////                    stopShooting();
+//                    follower.followPath(driveToEnd, true);
+//                    setPathState(PathState.DRIVE_TO_END);
+//                }
+//                break;
+//
+//            case DRIVE_TO_END:
+//                if (!follower.isBusy()) {
+//                    setPathState(PathState.IDLE);
+//                }
+//                break;
 
             case IDLE:
                 break;
@@ -471,6 +479,12 @@ public class BlueNewClose extends OpMode {
 
     @Override
     public void init() {
+
+        outtake = hardwareMap.get(DcMotorEx.class, "o1");
+        outtake.setDirection(DcMotorSimple.Direction.REVERSE);
+        outtake2 = hardwareMap.get(DcMotorEx.class, "o2");
+
+        outtake2.setDirection(DcMotorSimple.Direction.FORWARD);
         pathState = PathState.DRIVE_START_TO_SHOOT;
         pathTimer = new Timer();
         opModeTimer = new Timer();
@@ -479,20 +493,12 @@ public class BlueNewClose extends OpMode {
 
         // Initialize mechanisms
         turret.init(hardwareMap);
-        hoodMech.init(hardwareMap);
-        flywheelMech.init(hardwareMap);
+        hood.init(hardwareMap);
+        gate.init(hardwareMap);
+        intake.init(hardwareMap);
 
         // Initialize motors
-        intake = hardwareMap.get(DcMotor.class, "intake");
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
-        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-//         Initialize servos
-        gate = hardwareMap.get(Servo.class, "gate");
-        gate.setDirection(Servo.Direction.REVERSE);
-
-        // Set initial servo positions
-        gate.setPosition(GATE_OPEN);
 
 
         // Set initial servo positions
@@ -500,7 +506,7 @@ public class BlueNewClose extends OpMode {
 
         buildPaths();
         // Blue starting position: mirrored X and heading (with 2.5 offset)
-        follower.setPose(new Pose(22.55024711696869, 120.4481054365733, Math.toRadians(145)));
+        follower.setPose(new Pose(22.55024711696869, 116.4481054365733, Math.toRadians(180)));
 
         telemetry.addLine("Initialized - Ready!");
         telemetry.update();
@@ -508,21 +514,39 @@ public class BlueNewClose extends OpMode {
 
     public void start() {
         opModeTimer.resetTimer();
-        startShooters(); // Start shooters using flywheel mechanism
+//        startShooters(); // Start shooters using flywheel mechanism
         follower.followPath(driveStartToShoot, true);
         setPathState(PathState.DRIVE_START_TO_SHOOT);
     }
 
     @Override
     public void loop() {
+        intake.allspin();
+        vel = (int) MathFunctions.clamp(
+                -0.00000496881 * Math.pow(turret.getDistanceToGoal(), 4)
+                        + 0.00196997 * Math.pow(turret.getDistanceToGoal(), 3)
+                        - 0.262396 * Math.pow(turret.getDistanceToGoal(), 2)
+                        + 18.24098 * turret.getDistanceToGoal()
+                        + 455.32109,
+                0,
+                1720
+        );
+
         follower.update();
         statePathUpdate();
         turret.update(follower); //? not sure if needs ,0
-
+        hood.setPosition(hood.autoshoot(turret.getDistanceToGoal()));
         // Continuously update flywheel power during shooting
         if (isShooting) {
             updateShooters();
         }
+
+        double velocity = (outtake.getVelocity());
+        double error = vel - velocity;
+        double feedback = error * 0.005;
+        double feedforward = 0.00036 * vel + 0.08;
+        outtake.setPower(feedback + feedforward);
+        outtake2.setPower(feedback + feedforward);
 
 
         // Telemetry
