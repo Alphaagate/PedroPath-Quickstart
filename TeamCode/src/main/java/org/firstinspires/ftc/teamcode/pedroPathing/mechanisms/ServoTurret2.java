@@ -27,12 +27,17 @@ public class ServoTurret2 {
     public static double TURRET_OFFSET_FROM_ROBOT_CENTER = 1.0;
 
     public static final double SERVO_DEGREES = 355.0;
-    public static final double SERVO_MIN = 0.02;
-    public static final double SERVO_MAX = 0.98;
+    public static final double SERVO_MIN = 0.01;
+    public static final double SERVO_MAX = 0.99;
     public static final double DEFAULT_POSITION = 0.5;
 
     // Fine-tune alignment without touching the math (configurable via dashboard)
     public static double SERVO_TRIM = 0.0;
+    public static double MANUAL_TRIM_STEP = 0.005;
+
+    // Angular offset applied before servo math — use buttons to nudge aim left/right
+    public static double HEADING_OFFSET = 0.0; // radians
+    public static double HEADING_OFFSET_STEP = Math.toRadians(2.0); // 2° per press
 
     // ========================================================================
     // STATE
@@ -55,8 +60,6 @@ public class ServoTurret2 {
 
         setExtendedPwmRange(turretA);
         setExtendedPwmRange(turretB);
-
-
     }
 
     private void setExtendedPwmRange(Servo servo) {
@@ -88,6 +91,9 @@ public class ServoTurret2 {
         double angleToGoal = Math.atan2(deltaY, deltaX);
         double relativeAngle = normalizeAngle(angleToGoal - robotPose.getHeading());
 
+        // Apply heading offset in angle space before converting to servo position
+        relativeAngle = normalizeAngle(relativeAngle + HEADING_OFFSET);
+
         double servoRadiansTotal = Math.toRadians(SERVO_DEGREES);
 
         double servoPosition = 0.5 + (-relativeAngle / servoRadiansTotal) + SERVO_TRIM;
@@ -104,8 +110,20 @@ public class ServoTurret2 {
 
     public void setPosition(double position) {
         position = Math.max(0.0, Math.min(1.0, position));
-        turretA.setPosition(position);
-        turretB.setPosition(position);
+        turretA.setPosition(position - 0.01);
+        turretB.setPosition(position - 0.01);
+    }
+
+    public void adjustTrim(double delta) {
+        SERVO_TRIM += delta;
+    }
+
+    public void adjustHeadingOffset(double delta) {
+        HEADING_OFFSET += delta;
+    }
+
+    public void resetHeadingOffset() {
+        HEADING_OFFSET = 0.0;
     }
 
     // ========================================================================
