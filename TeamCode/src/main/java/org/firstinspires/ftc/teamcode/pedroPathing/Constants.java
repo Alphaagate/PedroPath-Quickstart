@@ -28,7 +28,7 @@ public class Constants {
             .centripetalScaling(0);
 
     public static PathConstraints pathConstraints = new PathConstraints(
-            0.99,
+            0.97,//before was 0.99
             100,
             1.35,
             1);

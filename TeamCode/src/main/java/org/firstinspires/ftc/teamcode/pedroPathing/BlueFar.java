@@ -4,564 +4,290 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.ServoTurret;
-import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.flywheel;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.ServoTurret2;
+import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.gate;
 import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.hood;
 import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.intake;
 
 @Autonomous
 public class BlueFar extends OpMode {
-    private ServoTurret turret = new ServoTurret();
-    private hood hoodMech = new hood();
-    private flywheel flywheelMech = new flywheel();
+    private ServoTurret2 turret = new ServoTurret2();
+    private hood hood = new hood();
+    private gate gate = new gate();
+    private intake intake = new intake();
+
+    private int count = 0;
+
+    public double vel;
+
     private Follower follower;
     Timer pathTimer, opModeTimer, shootTimer;
 
+    private DcMotorEx outtake, outtake2;
 
-    // Motors
-    private DcMotor intake;
-
-    // Servos
-    private Servo gate;
-    private final double GATE_OPEN = 0;
-    private final double GATE_CLOSED = 1;
-
-    // Motor powers
-    private final double INTAKE_POWER = 1.0;
     private boolean isShooting = false;
+    PathChain driveToSet1, driveToShootPre, driveSet1ToShoot, driveToLoadingZone, driveToLoadingZoneToShoot, driveToEnd;
 
-    int count = 0;
-
-
-    PathChain drive1, drive2, drive3, drive4, drive5, drive6, drive7, drive8, drive9, drive10, drive11, drive12;
-
-    Timer pathtimer;
+    private final double SHOOT_TIME = 0.67;
+    private final double INTAKE_TIME = 0;
 
     public enum PathState {
-        START,
-        DRIVE1,
-        DRIVE2,
-        DRIVE3,
-        DRIVE4,
-        DRIVE5,
-        DRIVE6,
-        DRIVE7,
-        DRIVE8,
-        DRIVE9,
-        DRIVE10,
-        DRIVE11,
+        SPINUP,
+        SHOOT_PRELOAD,
+        DRIVE_TO_SET1,
+        INTAKE_SET1,
+        DRIVE_SET1_TO_SHOOT,
+        SHOOT_SET1,
+        DRIVE_TO_LOADING_ZONE,
+        DRIVE_LOADING_ZONE_TO_SHOOT,
+        SHOOT_LOADING_ZONE,
+        DRIVE_TO_END,
         IDLE
     }
-    PathState pathState;
 
+    PathState pathState;
 
     @Override
     public void init() {
-        pathState = PathState.START;
-        pathtimer = new Timer();
+        outtake = hardwareMap.get(DcMotorEx.class, "o1");
+        outtake.setDirection(DcMotorSimple.Direction.REVERSE);
+        outtake2 = hardwareMap.get(DcMotorEx.class, "o2");
+        outtake2.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        pathTimer = new Timer();
+        opModeTimer = new Timer();
+        shootTimer = new Timer();
         follower = Constants.createFollower(hardwareMap);
+
+        turret.init(hardwareMap);
+        hood.init(hardwareMap);
+        gate.init(hardwareMap);
+        intake.init(hardwareMap);
+
         buildPaths();
-        follower.setPose(new Pose(56, 8, Math.toRadians(180)));
-//        intake.init(hardwareMap);
+        follower.setPose(new Pose(53.5, 8, Math.toRadians(180)));
+
+        gate.close();
+        telemetry.addLine("Initialized - Ready!");
+        telemetry.update();
+    }
+
+    @Override
+    public void start() {
+        turret.adjustTrim(-0.01);
+        opModeTimer.resetTimer();
+        gate.close();
+        follower.followPath(driveToShootPre, true);
+        setPathState(PathState.SPINUP);
     }
 
     @Override
     public void loop() {
+        vel = (int) MathFunctions.clamp(
+                -0.00000496881 * Math.pow(turret.getDistanceToGoal(), 4)
+                        + 0.00196997 * Math.pow(turret.getDistanceToGoal(), 3)
+                        - 0.262396 * Math.pow(turret.getDistanceToGoal(), 2)
+                        + 18.24098 * turret.getDistanceToGoal()
+                        + 455.32109,
+                0,
+                1720
+        );
 
         follower.update();
         statePathUpdate();
-        turret.update(follower); //? not sure if needs ,0
-        // Continuously update flywheel power during shooting
-        if (isShooting) {
-            updateShooters();
-        }
+        turret.update(follower);
+        hood.setPosition(hood.autoshoot(turret.getDistanceToGoal()));
+
+        double velocity = outtake.getVelocity();
+        double error = vel - velocity;
+        double feedback = error * 0.005;
+        double feedforward = 0.00036 * vel + 0.08;
+        outtake.setPower(feedback + feedforward);
+        outtake2.setPower(feedback + feedforward);
+
+        telemetry.addData("State", pathState);
+        telemetry.addData("Elapsed Time", opModeTimer.getElapsedTimeSeconds());
+        telemetry.addData("State Timer", pathTimer.getElapsedTimeSeconds());
+        telemetry.addData("Follower Busy", follower.isBusy());
+        telemetry.addData("X", follower.getPose().getX());
+        telemetry.addData("Y", follower.getPose().getY());
+        telemetry.addData("Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+        telemetry.addData("Cycle Count", count);
+        telemetry.update();
     }
-    public void start() {
-        follower.followPath(drive1, true);
-        setPathState(PathState.START);
-    }
-    public void buildPaths(){
-        drive1 = follower.pathBuilder()
-                .addPath(
-                        new BezierCurve(
-                                new Pose(56.000, 8.000),
-                                new Pose(41.359, 40.545),
-                                new Pose(15.292, 35.186)
-                        )
-                )
+
+    public void buildPaths() {
+        driveToShootPre = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Pose(53.500, 8.000),
+
+                        new Pose(50.292, 15.186)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(160))
+                .build();
+        driveToSet1 = follower.pathBuilder()
+                .addPath(new BezierCurve(
+                        new Pose(50.292, 15.186),
+                        new Pose(41.359, 40.545),
+                        new Pose(15.292, 35.186)
+                ))
+                .setLinearHeadingInterpolation(Math.toRadians(160), Math.toRadians(180))
+                .build();
+
+        driveSet1ToShoot = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Pose(15.292, 35.186),
+                        new Pose(56.000, 9.000)
+                ))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
-
-
-        drive2 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(15.292, 35.186),
-                                new Pose(55.913, 7.409)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-        drive3 = follower.pathBuilder()
-
-                .addPath(
-                        new BezierLine(
-                                new Pose(55.913, 10.409),
-                                new Pose(12.137, 10.794)
-                        )
-                )
+        driveToLoadingZone = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Pose(56.000, 9.000),
+                        new Pose(8.137, 7.794)
+                ))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
-        drive4 = follower.pathBuilder()
-
-                .addPath(
-                        new BezierLine(
-                                new Pose(12.137, 10.794),
-                                new Pose(55.562, 10.969)
-                        )
-                )
+        driveToLoadingZoneToShoot = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Pose(8.137, 7.794),
+                        new Pose(56.000, 9.000)
+                ))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
-
-
-        drive5 = follower.pathBuilder()
-
-                .addPath(
-                        new BezierLine(
-                                new Pose(55.562, 10.969),
-                                new Pose(12.122, 10.860)
-                        )
-                )
+        driveToEnd = follower.pathBuilder()
+                .addPath(new BezierLine(
+                        new Pose(56.000, 9.000),
+                        new Pose(55.562, 30)
+                ))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
-        drive6 = follower.pathBuilder()
-
-                .addPath(
-                        new BezierLine(
-                                new Pose(12.122, 10.860),
-                                new Pose(55.466, 10.942)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-        drive7 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(55.466, 10.942),
-                                new Pose(12.419, 10.752)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-        drive8 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(12.419, 10.752),
-                                new Pose(55.200, 10.653)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-        drive9 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(55.466, 10.942),
-                                new Pose(12.419, 10.752)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-        drive10 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(12.419, 10.752),
-                                new Pose(55.200, 10.653)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-        drive11 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(55.466, 10.942),
-                                new Pose(12.419, 10.752)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-        drive12 = follower.pathBuilder()
-                .addPath(
-                        new BezierLine(
-                                new Pose(12.419, 10.752),
-                                new Pose(55.200, 10.653)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(180))
-                .build();
-
-        // use                         new Pose(58.384, 84.526, Math.toRadians(145)) as start point for next path
-    }
-
-
-
-    // Helper methods for mechanisms
-    private void startIntake() {
-        intake.setPower(INTAKE_POWER);
-    }
-
-    private void stopIntake() {
-        intake.setPower(0);
-    }
-
-    private void startShooters() {
-        // Use the flywheel mechanism's autoshoot to calculate velocity based on distance from turret
-        double goalDistance = turret.getDistanceToGoal();
-        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-        flywheelMech.shoot(targetVelocity);
-    }
-
-    private void updateShooters() {
-        // Continuously update the flywheel during shooting using turret's calculated distance
-        double goalDistance = turret.getDistanceToGoal();
-        double targetVelocity = flywheelMech.autoshoot(goalDistance);
-        flywheelMech.shoot(targetVelocity);
-    }
-
-    private void stopShooters() {
-        flywheelMech.shoot(0);
-    }
-
-    private void prepareToShoot() {
-        // Use the hood mechanism's autoshoot to calculate hood position based on turret's distance
-        double goalDistance = turret.getDistanceToGoal();
-        double hoodPosition = hoodMech.autoshoot(goalDistance);
-        hoodMech.setPosition(hoodPosition);
-
-        // Gate is already open from the drive, just set shooting flag
-        isShooting = true;
-        shootTimer.resetTimer();
-    }
-
-    private void shoot() {
-        // Gate is already open, just run intake to push balls through
-        intake.setPower(INTAKE_POWER);
-    }
-
-    private void stopShooting() {
-        gate.setPosition(GATE_CLOSED);
-        stopIntake();
-        isShooting = false;
     }
 
     public void statePathUpdate() {
         switch (pathState) {
-            case START:
-                if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                     follower.followPath(drive1, true);
-                     setPathState(PathState.DRIVE1);
+            case SPINUP:
+                intake.allspin();
+
+                    setPathState(PathState.SHOOT_PRELOAD);
+
+
+            // --- Shoot the preloaded rings at starting position ---
+            case SHOOT_PRELOAD:
+
+                if (pathTimer.getElapsedTimeSeconds()>2){
+                    gate.open();
                 }
-                break;
-            case DRIVE1:
-                if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                    follower.followPath(drive2, true);
-                    setPathState(PathState.DRIVE2);
+                if (pathTimer.getElapsedTimeSeconds() > 2.7) {
+                    gate.close();
+                    intake.intakeonly();
+                    follower.followPath(driveToSet1, true);
+                    setPathState(PathState.DRIVE_TO_SET1);
                 }
                 break;
 
-            case DRIVE2:
+            // --- Drive out to the far ring set ---
+            case DRIVE_TO_SET1:
                 if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                    follower.followPath(drive3, true);
-                    setPathState(PathState.DRIVE3);
+                    setPathState(PathState.INTAKE_SET1);
                 }
                 break;
 
-            case DRIVE3:
-                if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                    follower.followPath(drive4, true);
-                    setPathState(PathState.DRIVE4);
+            // --- Intake rings at Set1, then drive back to shoot position ---
+            case INTAKE_SET1:
+                if (pathTimer.getElapsedTimeSeconds() > INTAKE_TIME) {
+                    intake.allspin();
+                    follower.followPath(driveSet1ToShoot, true);
+                    setPathState(PathState.DRIVE_SET1_TO_SHOOT);
                 }
                 break;
 
-            case DRIVE4:
+            // --- Drive back from Set1 to shoot position ---
+            case DRIVE_SET1_TO_SHOOT:
                 if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                    follower.followPath(drive5, true);
-                    setPathState(PathState.DRIVE5);
+                    setPathState(PathState.SHOOT_SET1);
                 }
                 break;
 
-            case DRIVE5:
-                if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                    follower.followPath(drive6, true);
-                    setPathState(PathState.DRIVE6);
+            // --- Shoot rings collected from Set1 ---
+            case SHOOT_SET1:
+                intake.allspin();
+                gate.open();
+                if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
+                    gate.close();
+                    intake.intakeonly();
+                    follower.followPath(driveToLoadingZone, true);
+                    setPathState(PathState.DRIVE_TO_LOADING_ZONE);
                 }
                 break;
-            case DRIVE6:
+
+            // --- Drive to loading zone corner, start intake, then immediately begin return ---
+            case DRIVE_TO_LOADING_ZONE:
                 if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                    follower.followPath(drive7, true);
-                    setPathState(PathState.DRIVE7);
+                    intake.allspin(); // start picking up rings at the corner
+                    follower.followPath(driveToLoadingZoneToShoot, true); // ✅ start return drive
+                    setPathState(PathState.DRIVE_LOADING_ZONE_TO_SHOOT);
                 }
                 break;
-            case DRIVE7:
+
+            // --- Drive back from loading zone to shoot position while intaking ---
+            case DRIVE_LOADING_ZONE_TO_SHOOT:
+                if (pathTimer.getElapsedTimeSeconds() < 0.3){
+                    intake.stop();
+                }
+                else{
+                intake.allspin();}
                 if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                    follower.followPath(drive8, true);
-                    setPathState(PathState.DRIVE8);
+
+                    setPathState(PathState.SHOOT_LOADING_ZONE);
                 }
                 break;
-            case DRIVE8:
-                if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                    follower.followPath(drive9, true);
-                    setPathState(PathState.DRIVE9);
+
+            // --- Shoot loading zone rings, then cycle again or end ---
+            case SHOOT_LOADING_ZONE:
+                gate.open();
+                if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
+                    gate.close();
+                    intake.intakeonly();
+                    count++;
+
+                    if (count < 7) {
+                        // ✅ Cycle back to loading zone for another pass
+                        follower.followPath(driveToLoadingZone, true);
+                        setPathState(PathState.DRIVE_TO_LOADING_ZONE);
+                    } else {
+                        // Done all 3 cycles, park
+                        follower.followPath(driveToEnd, true);
+                        setPathState(PathState.DRIVE_TO_END);
+                    }
                 }
                 break;
-            case DRIVE9:
+
+            // --- Drive to parking position ---
+            case DRIVE_TO_END:
                 if (!follower.isBusy()) {
-                    //stuff
-                    //setPathState(PathState.SHOOT);
-                    follower.followPath(drive10, true);
                     setPathState(PathState.IDLE);
                 }
                 break;
-//            public void statePathUpdate() {
-//                switch (pathState) {
-//                    case START:
-//                        if (!follower.isBusy()) {
-////                    updateShooters();
-//
-////                    prepareToShoot();
-//                            setPathState(BlueSoloClose.PathState.);
-//                        }
-//                        break;
-//
-//                    case SHOOT_PRELOAD:
-////                shoot();
-//                        if (pathTimer.getElapsedTimeSeconds() > 1.5) {
-////                    stopShooting();
-//                            follower.followPath(driveToSet2, true);
-//                            setPathState(BlueSoloClose.PathState.DRIVE_TO_SET2);
-////                    startIntake();
-//                        }
-//                        break;
-//
-//                    case DRIVE_TO_SET2:
-//                        if (!follower.isBusy()) {
-//                            setPathState(BlueSoloClose.PathState.INTAKE_SET2);
-//                        }
-//                        break;
-//
-//                    case INTAKE_SET2:
-//                        if (pathTimer.getElapsedTimeSeconds() > INTAKE_TIME) {
-//                            // Keep gate closed and intake running during drive
-////                    gate.setPosition(GATE_CLOSED);
-//                            follower.followPath(driveSet2ToShoot, true);
-//                            setPathState(BlueSoloClose.PathState.DRIVE_SET2_TO_SHOOT);
-//                        }
-//                        break;
-//
-//                    case DRIVE_SET2_TO_SHOOT:
-//                        // Run intake for 0.5s during drive, then stop and open gate
-//                        if (pathTimer.getElapsedTimeSeconds() >= 0.5) {
-////                    stopIntake();
-////                    gate.setPosition(GATE_OPEN);
-//                        }
-//
-//                        if (!follower.isBusy()) {
-////                    prepareToShoot();
-//                            setPathState(BlueSoloClose.PathState.SHOOT_SET2);
-//                        }
-//                        break;
-//
-//                    case SHOOT_SET2:
-////                shoot();
-//                        if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
-////                    stopShooting();
-//                            follower.followPath(driveToGate, true);
-//                            setPathState(BlueSoloClose.PathState.DRIVE_TO_GATE);
-////                    startIntake();
-//                        }
-//                        break;
-//
-//                    case DRIVE_TO_GATE:
-//                        if (!follower.isBusy()){
-//                            follower.followPath(adjust,1, true);
-//                            setPathState(BlueSoloClose.PathState.ADJUST);
-//                        }
-//                        break;
-//
-//                    case ADJUST:
-//                        if (pathTimer.getElapsedTimeSeconds() >= 1.5){
-//                            // Keep gate closed and intake running during drive
-////                    gate.setPosition(GATE_CLOSED);
-//                            follower.followPath(driveGateToShoot, true);
-//                            setPathState(BlueSoloClose.PathState.DRIVE_GATE_TO_SHOOT);
-//                        }
-//                        break;
-//
-//
-//                    case DRIVE_GATE_TO_SHOOT:
-//                        // Run intake for 0.5s during drive, then stop and open gate
-//                        if (pathTimer.getElapsedTimeSeconds() >= 0.5) {
-////                    stopIntake();
-////                    gate.setPosition(GATE_OPEN);
-//                        }
-//
-//                        if(!follower.isBusy()){
-////                    prepareToShoot();
-//                            setPathState(BlueSoloClose.PathState.SHOOT_GATE);
-//                        }
-//                        break;
-//
-//                    case SHOOT_GATE:
-////                shoot();
-//                        if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
-////                    stopShooting();
-//                            count++;
-//                            if (count == 3) {
-//                                follower.followPath(driveToSet1, true);
-//                                setPathState(BlueSoloClose.PathState.DRIVE_TO_SET1);
-////                        startIntake();
-//                            }
-//                            else {
-//                                follower.followPath(driveToGate, true);
-//                                setPathState(BlueSoloClose.PathState.DRIVE_TO_GATE);
-////                        startIntake();
-//                            }
-//                        }
-//                        break;
-//
-//                    case DRIVE_TO_SET1:
-//                        if (!follower.isBusy()) {
-//                            setPathState(BlueSoloClose.PathState.INTAKE_SET1);
-//                        }
-//                        break;
-//
-//                    case INTAKE_SET1:
-//                        if (pathTimer.getElapsedTimeSeconds() > INTAKE_TIME) {
-//                            // Keep gate closed and intake running during drive
-////                    gate.setPosition(GATE_CLOSED);
-//                            follower.followPath(driveSet1ToShoot, true);
-//                            setPathState(BlueSoloClose.PathState.DRIVE_SET1_TO_SHOOT);
-//                        }
-//                        break;
-//
-//                    case DRIVE_SET1_TO_SHOOT:
-//                        // Run intake for 0.5s during drive, then stop and open gate
-//                        if (pathTimer.getElapsedTimeSeconds() >= 0.5) {
-////                    stopIntake();
-////                    gate.setPosition(GATE_OPEN);
-//                        }
-//
-//                        if (!follower.isBusy()) {
-////                    prepareToShoot();
-//                            setPathState(BlueSoloClose.PathState.SHOOT_SET1);
-//                        }
-//                        break;
-//
-//                    case SHOOT_SET1:
-////                shoot();
-//                        if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
-////                    stopShooting();
-//                            follower.followPath(driveToEnd, true);
-////                    startIntake();
-//                            setPathState(BlueSoloClose.PathState.DRIVE_TO_END);
-//                        }
-//                        break;
-//
-//                    case DRIVE_TO_SET3:
-//                        if (!follower.isBusy()) {
-//                            setPathState(BlueSoloClose.PathState.INTAKE_SET3);
-//                        }
-//                        break;
-//
-//                    case INTAKE_SET3:
-//                        if (pathTimer.getElapsedTimeSeconds() > INTAKE_TIME) {
-//                            // Keep gate closed and intake running during drive
-////                    gate.setPosition(GATE_CLOSED);
-//                            follower.followPath(driveSet3ToShoot, true);
-//                            setPathState(BlueSoloClose.PathState.DRIVE_SET3_TO_SHOOT);
-//                        }
-//                        break;
-//
-//                    case DRIVE_SET3_TO_SHOOT:
-//                        // Run intake for 0.5s during drive, then stop and open gate
-//                        if (pathTimer.getElapsedTimeSeconds() >= 0.5) {
-////                    stopIntake();
-////                    gate.setPosition(GATE_OPEN);
-//                        }
-//
-//                        if (!follower.isBusy()) {
-////                    prepareToShoot();
-//                            setPathState(BlueSoloClose.PathState.SHOOT_SET3);
-//                        }
-//                        break;
-//
-//                    case SHOOT_SET3:
-////                shoot();
-//                        if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
-////                    stopShooting();
-//                            follower.followPath(driveToEnd, true);
-//                            setPathState(BlueSoloClose.PathState.DRIVE_TO_END);
-//                        }
-//                        break;
-//
-//                    case DRIVE_TO_END:
-//                        if (!follower.isBusy()) {
-//                            setPathState(BlueSoloClose.PathState.IDLE);
-//                        }
-//                        break;
-//
-//                    case IDLE:
-//                        break;
-//
-//                    default:
-//                        break;
-//                }
-//            }
 
             case IDLE:
                 break;
-//            if (pathtimer.getElapsedTimeSeconds() > SHOOT_TIME) {
-//
-//            }
-//
-
-
-            default:
-                break;
         }
     }
-    public void  setPathState(PathState newState) {
+
+    public void setPathState(PathState newState) {
         pathState = newState;
-        pathtimer.resetTimer();
+        pathTimer.resetTimer();
     }
-
-
-
 }

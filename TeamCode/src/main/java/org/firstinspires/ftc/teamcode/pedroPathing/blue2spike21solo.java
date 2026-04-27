@@ -88,8 +88,8 @@ public class blue2spike21solo extends OpMode {
                 .addPath(
                         new BezierCurve(
                                 new Pose(53.423, 74.143),
-                                new Pose(40.847, 53.795),
-                                new Pose(13.474, 56.973)
+                                new Pose(40.847, 55.795, Math.toRadians(180)),
+                                new Pose(12.474, 58.373)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(200), Math.toRadians(180))
@@ -97,8 +97,9 @@ public class blue2spike21solo extends OpMode {
 
         driveSet2ToShoot = follower.pathBuilder()
                 .addPath(
-                        new BezierLine(
-                                new Pose(13.474, 56.973),
+                        new BezierCurve(
+                                new Pose(12.474, 58.373),
+                                new Pose(40.847, 55.795),
                                 new Pose(53.423, 74.143)
                         )
                 )
@@ -110,28 +111,28 @@ public class blue2spike21solo extends OpMode {
                         new BezierCurve(
                                 new Pose(53.423, 74.143),
                                 new Pose(46, 55),
-                                new Pose(11.261, 59.227)
+                                new Pose(9.861, 57.027)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(165))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(155))
                 .build();
 
         driveGateToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierCurve(
-                                new Pose(11.261, 59.227),
+                                new Pose(9.861, 57.027),
                                 new Pose(46, 55),
                                 new Pose(53.423, 74.143)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(165), Math.toRadians(180))
+                .setLinearHeadingInterpolation(Math.toRadians(155), Math.toRadians(180))
                 .build();
 
         driveToSet1 = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
                                 new Pose(53.423, 74.143),
-                                new Pose(18.43050847457627, 82.94237288135591)
+                                new Pose(17.43050847457627, 82.94237288135591)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
@@ -140,7 +141,7 @@ public class blue2spike21solo extends OpMode {
         driveSet1ToShoot = follower.pathBuilder()
                 .addPath(
                         new BezierLine(
-                                new Pose(18.43050847457627, 82.94237288135591),
+                                new Pose(17.43050847457627, 82.94237288135591),
                                 new Pose(53.423, 74.143)
                         )
                 )
@@ -151,7 +152,7 @@ public class blue2spike21solo extends OpMode {
                 .addPath(
                         new BezierLine(
                                 new Pose(53.423, 74.143),
-                                new Pose(52.446, 70.568)
+                                new Pose(52.046, 70.068)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
@@ -188,7 +189,8 @@ public class blue2spike21solo extends OpMode {
 
             case INTAKE_SET2:
                 if (pathTimer.getElapsedTimeSeconds() > INTAKE_TIME) {
-                    intake.allspin();
+                    intake.stop();
+                    gate.open();
                     follower.followPath(driveSet2ToShoot, true);
                     setPathState(PathState.DRIVE_SET2_TO_SHOOT);
                 }
@@ -202,7 +204,7 @@ public class blue2spike21solo extends OpMode {
 
             case SHOOT_SET2:
                 intake.allspin();
-                gate.open();
+
                 if (pathTimer.getElapsedTimeSeconds() > SHOOT_TIME) {
                     gate.close();
                     intake.intakeonly();
@@ -220,9 +222,9 @@ public class blue2spike21solo extends OpMode {
             case ADJUST:
                 double gateWaitTime;
                 switch (count) {
-                    case 0: gateWaitTime = 0.75; break;
-                    case 1: gateWaitTime = 1.0; break;
-                    case 2: gateWaitTime = 0.7; break;
+                    case 0: gateWaitTime = 1.15; break;
+                    case 1: gateWaitTime = 1.35; break;
+                    case 2: gateWaitTime = 1.2; break;
                     case 3: gateWaitTime = 1.1; break;
                     default: gateWaitTime = 1.5; break;
                 }
@@ -375,8 +377,8 @@ public class blue2spike21solo extends OpMode {
         opModeTimer.resetTimer();
         follower.followPath(driveStartToShoot, true);
         setPathState(PathState.DRIVE_START_TO_SHOOT);
+        turret.adjustTrim(-0.01);
         gate.open();
-        turret.adjustTrim(ServoTurret2.MANUAL_TRIM_STEP);
     }
 
     @Override
@@ -386,7 +388,7 @@ public class blue2spike21solo extends OpMode {
                         + 0.00196997 * Math.pow(turret.getDistanceToGoal(), 3)
                         - 0.262396 * Math.pow(turret.getDistanceToGoal(), 2)
                         + 18.24098 * turret.getDistanceToGoal()
-                        + 535.32109,
+                        + 485.32109,
                 0,
                 1720
         );
